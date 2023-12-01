@@ -1,0 +1,25 @@
+There are two key things to know when working with the VGA. 
+
+The VGA does not take in pixel location data, instead the VGA takes in the color values that should be displayed at a given time. The display is constantly 
+updated pixel by pixel, in a row left to right, then down to the next row. The timing of this sweep can be controlled using horizontal and vertical reset
+signals. So what is sent to the VGA is the waveforms of R, G and B that should be displayed during a certain period of time, which will correspond to sets 
+of pixels on the display. I.E if Red is always on, then all the pixels will have the color red included.
+
+The other key thing to note is that there are only three 4-bit color inputs. R,G, and B, creating a 12 bit RGB color system. To derive other colors, you must combine 
+these colors. For example to create a fully yellow screen, the Inputs of R and G should always be on. This is because Red and Green combine to become Yellow when it 
+comes to light. Review Color Addition and the Primary Colors of Light to determine how to obtain the colors desired. 
+
+Within your constraints file, there is a section for the VGA connector. Each of these outputs in the section should be activated. The default constraints file should be 
+enough to identify which output is which.
+
+
+There are 2 files included for the VGA Code: vga640x480.v and top_square.v:
+
+vga640x480.v acts as a timing unit for the FPGA. It takes in the input of the board clock, and a pixel strobe which it uses to simulate the timing for sweeping through the pixels
+on the Display. What it does is sync up the sweep time on the VGA with a coordinate system in the code, so that pixel (1,1) in the code corresponds to the time that the top left 
+pixel on a display is updated. Then using pixel strobe, the module mimics the timing that the display port uses to sweep through and update pixels, and outputs the corresponding 
+pixel that is active at a given time. The outputs o_hs and o_vs are the signals that are sent through the VGA port to sync up the timing between the FPGA and the display. The outputs 
+o_x and o_y are the pixel that is being updated at the current time.
+
+top_square.v is code that actually uses vga640x480 to create images on the display. It creates a simple grid of 8 red squares against a black background, which will turn yellow
+or green depending on inputs fed into it. 
