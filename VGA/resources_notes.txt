@@ -1,0 +1,19 @@
+https://svenssonjoel.github.io/pages/nexys-a7-vga/index.html
+- very in-depth explanation
+- written in VHDL, not verilog
+- includes example constraints file for nexys a7-100t
+
+https://embeddedthoughts.com/2016/07/29/driving-a-vga-monitor-using-an-fpga/
+- useful explanation of how driving VGA output works
+- written for Basys 2, with modifications for Basys 3 (including a constraints file)
+- Basys 3 version should work fine on our board
+
+https://www.instructables.com/Video-Interfacing-With-FPGA-Using-VGA/
+- also for basys 3
+
+https://www.irjet.net/archives/V3/i3/IRJET-V3I3353.pdf
+- very in-depth academic paper about vga output from Artix-7 FPGA
+
+https://github.com/ultraembedded/core_jpeg/tree/main
+- JPEG -> VGA conversion
+- not strictly related to project because we are using the 
