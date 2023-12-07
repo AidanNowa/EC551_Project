@@ -21,7 +21,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module new_top(
-    input clk,                // FPGA internal clock. Ensure this is correctly set in your FPGA constraints.
+    input clk,                // FPGA internal clock. 
     input rst,                // Reset button. Active when pressed.
 
     // Camera pinouts
@@ -70,8 +70,6 @@ module new_top(
     reg [9:0] col_counter = 0; // 10 bits for 640 columns (0 to 639)
 
     // BRAM for frame buffer - stores image data
-    // Replace 'bram' with your actual BRAM module
-    // Ensure that memory size and data width match your requirements
     bram memory(
         .clk_read(cmos_pclk),   // Read clock synchronized with camera pixel clock.
         .clk_write(clk),        // Write clock synchronized with FPGA clock.
@@ -83,8 +81,6 @@ module new_top(
     );
 
     // Camera configuration module
-    // Replace 'camera_configure' with your actual module
-    // Ensure that all necessary configurations are included for your camera model
 //    camera_configure m0(
 //        .clk(clk),
 //        .start(config_start),
@@ -94,8 +90,6 @@ module new_top(
 //    );
 
     // Camera reading module - captures data from camera
-    // Replace 'camera_read' with your actual module
-    // Make sure it correctly interprets HREF, VSYNC, and pixel data
     camera_read m1 (
         .p_clock(cmos_pclk),
         .vsync(cmos_vsync),
@@ -107,8 +101,6 @@ module new_top(
     );
 
     // Pixel downsampling module - converts RGB565 to RGB444
-    // Replace 'pixel_downsample' with your actual module
-    // Ensure that the conversion maintains color fidelity as much as possible
     pixel_downsample m2 (
         .pixel_data(pixel_data),
         .ds_pixel(ds_pixel)
@@ -177,8 +169,8 @@ module new_top(
                         next_state = READ_FRAME;
                 end
                 PROCESS_FRAME: begin
-                    // Additional image processing (if any)
-                    // Set display_enable to start showing the image
+                    // image processing here
+                    // enable reading from memory to VGA
                     read_enable <= 1;
                     next_state = WRITE_FRAME;
                 end
@@ -186,9 +178,8 @@ module new_top(
                     // Currently displaying the frame
                     // Wait for the end of frame display or a condition to load the next frame
                     // For simplicity, let's return to IDLE
-                    // In a real application, you might want to wait for a signal to load the next frame
                     next_state = IDLE;
-                    read_enable <= 0; // Reset display_enable for the next frame
+                    read_enable <= 0; // Reset read_enable for the next frame
                 end
                 default: next_state = IDLE;
             endcase
