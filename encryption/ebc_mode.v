@@ -41,15 +41,11 @@ module ebc_mode
     
     genvar i;
     
-    generate
         for(i=0;i<HSIZE;i=i+1) begin
             ebc_enc_1bit EBC_ENC_1B(.K(key[i%BLOCK_SIZE]), .PT(image_row[i]), .CT(ciphertext_enc[i]));
         end     
-    endgenerate
     
-    generate
         for(i=0;i<HSIZE;i=i+1) begin
             ebc_enc_1bit EBC_DEC_1B(.K(key[i%BLOCK_SIZE]), .PT(ciphertext_enc[i]), .CT(plaintext_dec[i]));
         end     
-    endgenerate
 endmodule
