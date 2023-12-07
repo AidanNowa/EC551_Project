@@ -1,3 +1,4 @@
+
 `include "parameter.v" 						// Include definition file
 module image_read
 #(
@@ -62,10 +63,41 @@ integer i, j;
 // temporary signals for calculation: details in the paper.
 integer tempR0,tempR1,tempG0,tempG1,tempB0,tempB1; // temporary variables in contrast and brightness operation
 
-integer value,value1,value2,value4;// temporary variables in invert and threshold operation
+integer value,value1,value2,value4,value5,value6,value7,value8,value9,value10,value11,value12;// temporary variables in operations
 reg [ 9:0] row; // row index of the image
 reg [10:0] col; // column index of the image
 reg [18:0] data_count; // data counting for entire pixels of the image
+
+
+reg [7:0] window_R0 [0:2][0:2]; //used for methods that require knowledge of nearby pixels in a 3x3 grid
+reg [7:0] window_G0 [0:2][0:2];
+reg [7:0] window_B0 [0:2][0:2];
+reg [7:0] window_R1 [0:2][0:2]; 
+reg [7:0] window_G1 [0:2][0:2];
+reg [7:0] window_B1 [0:2][0:2];
+
+reg [7:0] blurred_pixel_R, blurred_pixel_G, blurred_pixel_B;
+reg [2:0] sharpening_kernel [0:2][0:2]; // laplacian filter
+initial begin
+    sharpening_kernel[0][0] = 0;
+    sharpening_kernel[0][1] = -1;
+    sharpening_kernel[0][2] = 0;
+    sharpening_kernel[1][0] = -1;
+    sharpening_kernel[1][1] = 2;
+    sharpening_kernel[1][2] = -1;
+    sharpening_kernel[2][0] = 0;
+    sharpening_kernel[2][1] = -1;
+    sharpening_kernel[2][2] = 0;
+end//initial
+
+//oil pianing variables
+reg [7:0] result;
+integer i, j, count;
+reg[7:0] color_histogram [0:255];
+reg[7:0] color_chart_R0 [0:14], color_chart_G0 [0:14], color_chart_B0 [0:14], color_chart_R1 [0:14], color_chart_G1 [0:14], color_chart_B1 [0:14];
+reg[7:0] max_color;
+    
+    
 //-------------------------------------------------//
 // -------- Reading data from input file ----------//
 //-------------------------------------------------//
@@ -234,13 +266,77 @@ always @(*) begin
 	DATA_G1 = 0;
 	DATA_B1 = 0;                                         
 	if(ctrl_data_run) begin
+	
+    //load windows for complicated functions
+    window_R0[0][0] = org_R[WIDTH * row-1 + col-2];
+    window_R0[0][1] = org_R[WIDTH * row-1 + col];
+    window_R0[0][2] = org_R[WIDTH * row-1 + col+2];
+    window_R0[1][0] = org_R[WIDTH * row + col-2];
+    window_R0[1][1] = org_R[WIDTH * row + col];
+    window_R0[1][2] = org_R[WIDTH * row + col+2];
+    window_R0[2][0] = org_R[WIDTH * row+1 + col-2];
+    window_R0[2][1] = org_R[WIDTH * row+1 + col];
+    window_R0[2][2] = org_R[WIDTH * row+1 + col+2];
+    
+    window_G0[0][0] = org_G[WIDTH * row-1 + col-2];
+    window_G0[0][1] = org_G[WIDTH * row-1 + col];
+    window_G0[0][2] = org_G[WIDTH * row-1 + col+2];
+    window_G0[1][0] = org_G[WIDTH * row + col-2];
+    window_G0[1][1] = org_G[WIDTH * row + col];
+    window_G0[1][2] = org_G[WIDTH * row + col+2];
+    window_G0[2][0] = org_G[WIDTH * row+1 + col-2];
+    window_G0[2][1] = org_G[WIDTH * row+1 + col];
+    window_G0[2][2] = org_G[WIDTH * row+1 + col+2];
+    
+    window_B0[0][0] = org_B[WIDTH * row-1 + col-2];
+    window_B0[0][1] = org_B[WIDTH * row-1 + col];
+    window_B0[0][2] = org_B[WIDTH * row-1 + col+2];
+    window_B0[1][0] = org_B[WIDTH * row + col-2];
+    window_B0[1][1] = org_B[WIDTH * row + col];
+    window_B0[1][2] = org_B[WIDTH * row + col+2];
+    window_B0[2][0] = org_B[WIDTH * row+1 + col-2];
+    window_B0[2][1] = org_B[WIDTH * row+1 + col];
+    window_B0[2][2] = org_B[WIDTH * row+1 + col+2];
+    
+    window_R1[0][0] = org_R[WIDTH * row-1 + col-2];
+    window_R1[0][1] = org_R[WIDTH * row-1 + col];
+    window_R1[0][2] = org_R[WIDTH * row-1 + col+2];
+    window_R1[1][0] = org_R[WIDTH * row + col-2];
+    window_R1[1][1] = org_R[WIDTH * row + col];
+    window_R1[1][2] = org_R[WIDTH * row + col+2];
+    window_R1[2][0] = org_R[WIDTH * row+1 + col-2];
+    window_R1[2][1] = org_R[WIDTH * row+1 + col];
+    window_R1[2][2] = org_R[WIDTH * row+1 + col+2];
+    
+    window_G1[0][0] = org_G[WIDTH * row-1 + col-2];
+    window_G1[0][1] = org_G[WIDTH * row-1 + col];
+    window_G1[0][2] = org_G[WIDTH * row-1 + col+2];
+    window_G1[1][0] = org_G[WIDTH * row + col-2];
+    window_G1[1][1] = org_G[WIDTH * row + col];
+    window_G1[1][2] = org_G[WIDTH * row + col+2];
+    window_G1[2][0] = org_G[WIDTH * row+1 + col-2];
+    window_G1[2][1] = org_G[WIDTH * row+1 + col];
+    window_G1[2][2] = org_G[WIDTH * row+1 + col+2];
+    
+    window_B1[0][0] = org_B[WIDTH * row-1 + col-2];
+    window_B1[0][1] = org_B[WIDTH * row-1 + col];
+    window_B1[0][2] = org_B[WIDTH * row-1 + col+2];
+    window_B1[1][0] = org_B[WIDTH * row + col-2];
+    window_B1[1][1] = org_B[WIDTH * row + col];
+    window_B1[1][2] = org_B[WIDTH * row + col+2];
+    window_B1[2][0] = org_B[WIDTH * row+1 + col-2];
+    window_B1[2][1] = org_B[WIDTH * row+1 + col];
+    window_B1[2][2] = org_B[WIDTH * row+1 + col+2];
+		
+
+		
 		
 		HSYNC   = 1'b1;
-		`ifdef BRIGHTNESS_OPERATION	
+		`ifdef BRIGHTNESS_ADDITION_OPERATION	
 		/**************************************/		
 		/*		BRIGHTNESS ADDITION OPERATION */
 		/**************************************/
-		if(SIGN == 1) begin
+		//if(SIGN == 1) begin
 		// R0
 		tempR0 = org_R[WIDTH * row + col   ] + VALUE;
 		if (tempR0 > 255)
@@ -275,11 +371,13 @@ always @(*) begin
 			DATA_B1 = 255;
 		else
 			DATA_B1 = org_B[WIDTH * row + col+1   ] + VALUE;
-	end
-	else begin
+		`endif
+	//end
+	//else begin
 	/**************************************/		
 	/*	BRIGHTNESS SUBTRACTION OPERATION */
 	/**************************************/
+	`ifdef BRIGHTNESS_SUBTRACTION_OPERATION
 		// R0
 		tempR0 = org_R[WIDTH * row + col   ] - VALUE;
 		if (tempR0 < 0)
@@ -314,7 +412,7 @@ always @(*) begin
 			DATA_B1 = 0;
 		else
 			DATA_B1 = org_B[WIDTH * row + col+1   ] - VALUE;
-	 end
+	 //end
 		`endif
 	
 		/**************************************/		
@@ -356,10 +454,709 @@ always @(*) begin
 			DATA_R1=0;
 			DATA_G1=0;
 			DATA_B1=0;
+			
 		end		
 		`endif
+		
+		/**************************************/		
+		/*		RED_OPERATION       	      */
+		/**************************************/
+		
+		`ifdef RED_OPERATION
+		DATA_R0=org_R[WIDTH * row + col  ];
+		DATA_G0=0;
+		DATA_B0=0;
+		
+		DATA_R1=org_R[WIDTH * row + col+1  ];
+		DATA_G1=0;
+		DATA_B1=0;
+		`endif
+		/**************************************/		
+		/*		GREEN_OPERATION       	      */
+		/**************************************/
+		
+		`ifdef GREEN_OPERATION
+		DATA_R0=0;
+		DATA_G0=org_G[WIDTH * row + col  ];
+		DATA_B0=0;
+		
+		DATA_R1=0;
+		DATA_G1=org_G[WIDTH * row + col+1  ];
+		DATA_B1=0;
+		`endif
+		/**************************************/		
+		/*		BLUE_OPERATION       	      */
+		/**************************************/
+		
+		`ifdef BLUE_OPERATION
+		DATA_R0=0;
+		DATA_G0=0;
+		DATA_B0=org_B[WIDTH * row + col  ];
+		
+		DATA_R1=0;
+		DATA_G1=0;
+		DATA_B1=org_B[WIDTH * row + col+1  ];
+		`endif
+
+		/**************************************/		
+		/*		GRAYSCALE_OPERATION       	  */
+		/**************************************/
+		
+		`ifdef GRAYSCALE_OPERATION
+		value5 = (5'd30 * org_R[WIDTH * row + col   ] + 6'd59* org_G[WIDTH * row + col   ] + 4'd11 * org_B[WIDTH * row + col   ]) / 100;
+		DATA_R0=value5;
+		DATA_G0=value5;
+		DATA_B0=value5;
+		value6 = (5'd30 * org_R[WIDTH * row + col+1   ] + 6'd59* org_G[WIDTH * row + col+1   ] + 4'd11 * org_B[WIDTH * row + col+1   ]) / 100;
+		DATA_R1=value6;
+		DATA_G1=value6;
+		DATA_B1=value6;	
+		`endif
+		
+		/**************************************/		
+		/*		TRIP_OPERATION       	      */
+		/**************************************/
+		
+		`ifdef TRIP_OPERATION
+		value5 = (5'd30 * org_R[WIDTH * row + col   ] + 6'd59* org_G[WIDTH * row + col   ] + 4'd11 * org_B[WIDTH * row + col   ]);
+		DATA_R0=value5;
+		DATA_G0=value5;
+		DATA_B0=value5;
+		value6 = (5'd30 * org_R[WIDTH * row + col+1   ] + 6'd59* org_G[WIDTH * row + col+1   ] + 4'd11 * org_B[WIDTH * row + col+1   ]);
+		DATA_R1=value6;
+		DATA_G1=value6;
+		DATA_B1=value6;	
+		`endif
+		
+		/**************************************/		
+		/*		BLUR_OPERATION       	      */
+		/**************************************/
+		`ifdef BLUR_OPERATION
+
+		//apply blur filter to pixels
+        DATA_R0 = (window_R0[0][0] + window_R0[0][1] + window_R0[0][2] + window_R0[1][0] + window_R0[1][1] + window_R0[1][2] + window_R0[2][0] + window_R0[2][1] + window_R0[2][2]) / 9;
+        DATA_G0 = (window_G0[0][0] + window_G0[0][1] + window_G0[0][2] + window_G0[1][0] + window_G0[1][1] + window_G0[1][2] + window_G0[2][0] + window_G0[2][1] + window_G0[2][2]) / 9;
+        DATA_B0 = (window_B0[0][0] + window_B0[0][1] + window_B0[0][2] + window_B0[1][0] + window_B0[1][1] + window_B0[1][2] + window_B0[2][0] + window_B0[2][1] + window_B0[2][2]) / 9;
+        DATA_R1 = (window_R1[0][0] + window_R1[0][1] + window_R1[0][2] + window_R1[1][0] + window_R1[1][1] + window_R1[1][2] + window_R1[2][0] + window_R1[2][1] + window_R1[2][2]) / 9;
+        DATA_G1 = (window_G1[0][0] + window_G1[0][1] + window_G1[0][2] + window_G1[1][0] + window_G1[1][1] + window_G1[1][2] + window_G1[2][0] + window_G1[2][1] + window_G1[2][2]) / 9;
+        DATA_B1 = (window_B1[0][0] + window_B1[0][1] + window_B1[0][2] + window_B1[1][0] + window_B1[1][1] + window_B1[1][2] + window_B1[2][0] + window_B1[2][1] + window_B1[2][2]) / 9;
+		`endif
+		
+		/**************************************/		
+		/*		SHARPEN_OPERATION       	  */
+		/**************************************/
+		`ifdef SHARPEN_OPERATION
+		value7 = (window_R0[0][0] * sharpening_kernel[0][0] + window_R0[0][1]  * sharpening_kernel[0][1] + window_R0[0][2]  * sharpening_kernel[0][2] + window_R0[1][0]  * sharpening_kernel[1][0] + window_R0[1][1]  * sharpening_kernel[1][1] + window_R0[1][2]  * sharpening_kernel[1][2] + window_R0[2][0]  * sharpening_kernel[2][0] + window_R0[2][1]  * sharpening_kernel[2][1] + window_R0[2][2] * sharpening_kernel[2][2]); 
+		value8 = (window_G0[0][0] * sharpening_kernel[0][0] + window_G0[0][1]  * sharpening_kernel[0][1] + window_G0[0][2]  * sharpening_kernel[0][2] + window_G0[1][0]  * sharpening_kernel[1][0] + window_G0[1][1]  * sharpening_kernel[1][1] + window_G0[1][2]  * sharpening_kernel[1][2] + window_G0[2][0]  * sharpening_kernel[2][0] + window_G0[2][1]  * sharpening_kernel[2][1] + window_G0[2][2] * sharpening_kernel[2][2]); 
+		value9 = (window_B0[0][0] * sharpening_kernel[0][0] + window_B0[0][1]  * sharpening_kernel[0][1] + window_B0[0][2]  * sharpening_kernel[0][2] + window_B0[1][0]  * sharpening_kernel[1][0] + window_B0[1][1]  * sharpening_kernel[1][1] + window_B0[1][2]  * sharpening_kernel[1][2] + window_B0[2][0]  * sharpening_kernel[2][0] + window_B0[2][1]  * sharpening_kernel[2][1] + window_B0[2][2] * sharpening_kernel[2][2]); 
+		value10 = (window_R1[0][0] * sharpening_kernel[0][0] + window_R1[0][1]  * sharpening_kernel[0][1] + window_R1[0][2]  * sharpening_kernel[0][2] + window_R1[1][0]  * sharpening_kernel[1][0] + window_R1[1][1]  * sharpening_kernel[1][1] + window_R1[1][2]  * sharpening_kernel[1][2] + window_R1[2][0]  * sharpening_kernel[2][0] + window_R1[2][1]  * sharpening_kernel[2][1] + window_R1[2][2] * sharpening_kernel[2][2]); 
+		value11 = (window_G1[0][0] * sharpening_kernel[0][0] + window_G1[0][1]  * sharpening_kernel[0][1] + window_G1[0][2]  * sharpening_kernel[0][2] + window_G1[1][0]  * sharpening_kernel[1][0] + window_G1[1][1]  * sharpening_kernel[1][1] + window_G1[1][2]  * sharpening_kernel[1][2] + window_G1[2][0]  * sharpening_kernel[2][0] + window_G1[2][1]  * sharpening_kernel[2][1] + window_G1[2][2] * sharpening_kernel[2][2]); 
+		value12 = (window_B1[0][0] * sharpening_kernel[0][0] + window_B1[0][1]  * sharpening_kernel[0][1] + window_B1[0][2]  * sharpening_kernel[0][2] + window_B1[1][0]  * sharpening_kernel[1][0] + window_B1[1][1]  * sharpening_kernel[1][1] + window_B1[1][2]  * sharpening_kernel[1][2] + window_B1[2][0]  * sharpening_kernel[2][0] + window_B1[2][1]  * sharpening_kernel[2][1] + window_B1[2][2] * sharpening_kernel[2][2]); 
+		
+		//ensure values are legal
+		if(value7 < 0) 
+		  value7 = 0;
+		else if (value7 > 255) 
+		  value7 = 255;
+		if(value8 < 0) 
+		  value8 = 0;
+		else if (value8 > 255) 
+		  value8 = 255;
+		if(value9 < 0) 
+		  value9 = 0;
+		else if (value9 > 255) 
+		  value9 = 255;
+		if(value10 < 0) 
+		  value10 = 0;
+		else if (value10 > 255) 
+		  value10 = 255;
+		if(value11 < 0) 
+		  value11 = 0;
+		else if (value11 > 255) 
+		  value11 = 255;
+		if(value12 < 0) 
+		  value12 = 0;
+		else if (value12 > 255) 
+		  value12 = 255;  
+		  
+		DATA_R0=value7 / 3;
+		DATA_G0=value8 / 3;
+		DATA_B0=value9 / 3;
+		
+		DATA_R1=value10 / 3;
+		DATA_G1=value11 / 3;
+		DATA_B1=value12 / 3;
+		
+		
+		`endif
+		
+		/**************************************/		
+		/*		OIL_OPERATION          	      */
+		/**************************************/
+		
+		// create histogram with loose granularity and define colors based on that 
+		`ifdef OIL_OPERATION
+		//R0 CASE
+		
+		for(i = 0; i < 15; i = i + i) begin
+		  color_chart_R0[i] = 8'b00000000;
+		end //for
+		
+        for(i=0; i <= 2; i= i + 1)begin
+            for(j = 0; j <= 2; j = j + 1) begin
+                if(window_R0[i][j] > 0 && window_R0[i][j] <= 17) begin
+                    color_chart_R0[0] = color_chart_R0[0] + 1;
+                end //if
+                else if (window_R0[i][j] > 17 && window_R0[i][j] <= 34) begin
+                    color_chart_R0[1] = color_chart_R0[1] + 1;
+                end //elif
+                else if (window_R0[i][j] > 34 && window_R0[i][j] <= 51) begin
+                    color_chart_R0[2] = color_chart_R0[2] + 1;
+                end //elif
+                else if (window_R0[i][j] > 51 && window_R0[i][j] <= 68) begin
+                    color_chart_R0[3] = color_chart_R0[3] + 1;
+                end //elif
+                else if (window_R0[i][j] > 68 && window_R0[i][j] <= 85) begin
+                    color_chart_R0[4] = color_chart_R0[4] + 1;
+                end //elif
+                else if (window_R0[i][j] > 85 && window_R0[i][j] <= 102) begin
+                    color_chart_R0[5] = color_chart_R0[5] + 1;
+                end //elif
+                else if (window_R0[i][j] > 102 && window_R0[i][j] <= 119) begin
+                    color_chart_R0[6] = color_chart_R0[6] + 1;
+                end //elif
+                else if (window_R0[i][j] > 119 && window_R0[i][j] <= 136) begin
+                    color_chart_R0[7] = color_chart_R0[7] + 1;
+                end //elif
+                else if (window_R0[i][j] > 136 && window_R0[i][j] <= 153) begin
+                    color_chart_R0[8] = color_chart_R0[8] + 1;
+                end //elif
+                else if (window_R0[i][j] > 153 && window_R0[i][j] <= 170) begin
+                    color_chart_R0[9] = color_chart_R0[9] + 1;
+                end //elif
+                else if (window_R0[i][j] > 170 && window_R0[i][j] <= 187) begin
+                    color_chart_R0[10] = color_chart_R0[10] + 1;
+                end //elif
+                else if (window_R0[i][j] > 187 && window_R0[i][j] <= 204) begin
+                    color_chart_R0[11] = color_chart_R0[11] + 1;
+                end //elif
+                else if (window_R0[i][j] > 204 && window_R0[i][j] <= 221) begin
+                    color_chart_R0[12] = color_chart_R0[12] + 1;
+                end //elif
+                else if (window_R0[i][j] > 221 && window_R0[i][j] <= 238) begin
+                    color_chart_R0[13] = color_chart_R0[13] + 1;
+                end //elif
+                else if (window_R0[i][j] > 238 && window_R0[i][j] <= 255) begin
+                    color_chart_R0[14] = color_chart_R0[14] + 1;
+                end //elif
+
+            end // for
+        end // for
+        
+        max_color = 0;
+        for(i = 0; i <=14; i = i + 1) begin
+            //$display("values: %d", color_chart_R0);
+            if (color_chart_R0[i] > max_color) begin
+                max_color = i;
+            end//if
+        end // for
+        
+        case(max_color)
+            4'd0: DATA_R0 = 9;
+            4'd1: DATA_R0 = 26;
+            4'd2: DATA_R0 = 43;
+            4'd3: DATA_R0 = 60;
+            4'd4: DATA_R0 = 77;
+            4'd5: DATA_R0 = 94;
+            4'd6: DATA_R0 = 111;
+            4'd7: DATA_R0 = 128;
+            4'd8: DATA_R0 = 145;
+            4'd9: DATA_R0 = 162;
+            4'd10: DATA_R0 = 179;
+            4'd11: DATA_R0 = 196;
+            4'd12: DATA_R0 = 213;
+            4'd13: DATA_R0 = 230;
+            4'd14: DATA_R0 = 247;
+        endcase
+        //$display("RO VALUE: %d", DATA_R0);
+		
+		//G0 CASE
+		for(i = 0; i < 15; i = i + i) begin
+		  color_chart_G0[i] = 8'b00000000;
+		end //for
+		
+        for(i=0; i <= 2; i= i + 1)begin
+            for(j = 0; j <= 2; j = j + 1) begin
+                if(window_G0[i][j] > 0 && window_G0[i][j] <= 17) begin
+                    color_chart_G0[0] = color_chart_G0[0] + 1;
+                end //if
+                else if (window_G0[i][j] > 17 && window_G0[i][j] <= 34) begin
+                    color_chart_G0[1] = color_chart_G0[1] + 1;
+                end //elif
+                else if (window_G0[i][j] > 34 && window_G0[i][j] <= 51) begin
+                    color_chart_G0[2] = color_chart_G0[2] + 1;
+                end //elif
+                else if (window_G0[i][j] > 51 && window_G0[i][j] <= 68) begin
+                    color_chart_G0[3] = color_chart_G0[3] + 1;
+                end //elif
+                else if (window_G0[i][j] > 68 && window_G0[i][j] <= 85) begin
+                    color_chart_G0[4] = color_chart_G0[4] + 1;
+                end //elif
+                else if (window_G0[i][j] > 85 && window_G0[i][j] <= 102) begin
+                    color_chart_G0[5] = color_chart_G0[5] + 1;
+                end //elif
+                else if (window_G0[i][j] > 102 && window_G0[i][j] <= 119) begin
+                    color_chart_G0[6] = color_chart_G0[6] + 1;
+                end //elif
+                else if (window_G0[i][j] > 119 && window_G0[i][j] <= 136) begin
+                    color_chart_G0[7] = color_chart_G0[7] + 1;
+                end //elif
+                else if (window_G0[i][j] > 136 && window_G0[i][j] <= 153) begin
+                    color_chart_G0[8] = color_chart_G0[8] + 1;
+                end //elif
+                else if (window_G0[i][j] > 153 && window_G0[i][j] <= 170) begin
+                    color_chart_G0[9] = color_chart_G0[9] + 1;
+                end //elif
+                else if (window_G0[i][j] > 170 && window_G0[i][j] <= 187) begin
+                    color_chart_G0[10] = color_chart_G0[10] + 1;
+                end //elif
+                else if (window_G0[i][j] > 187 && window_G0[i][j] <= 204) begin
+                    color_chart_G0[11] = color_chart_G0[11] + 1;
+                end //elif
+                else if (window_G0[i][j] > 204 && window_G0[i][j] <= 221) begin
+                    color_chart_G0[12] = color_chart_G0[12] + 1;
+                end //elif
+                else if (window_G0[i][j] > 221 && window_G0[i][j] <= 238) begin
+                    color_chart_G0[13] = color_chart_G0[13] + 1;
+                end //elif
+                else if (window_G0[i][j] > 238 && window_G0[i][j] <= 255) begin
+                    color_chart_G0[14] = color_chart_G0[14] + 1;
+                end //elif
+
+            end // for
+        end // for
+        
+        max_color = 0;
+        for(i = 0; i <=14; i = i + 1) begin
+            if (color_chart_G0[i] > max_color) begin
+                max_color = i;
+            end//if
+        end // for
+        
+        case(max_color)
+            4'd0: DATA_G0 = 9;
+            4'd1: DATA_G0 = 26;
+            4'd2: DATA_G0 = 43;
+            4'd3: DATA_G0 = 60;
+            4'd4: DATA_G0 = 77;
+            4'd5: DATA_G0 = 94;
+            4'd6: DATA_G0 = 111;
+            4'd7: DATA_G0 = 128;
+            4'd8: DATA_G0 = 145;
+            4'd9: DATA_G0 = 162;
+            4'd10: DATA_G0 = 179;
+            4'd11: DATA_G0 = 196;
+            4'd12: DATA_G0 = 213;
+            4'd13: DATA_G0 = 230;
+            4'd14: DATA_G0 = 247;
+        endcase
+        //$display("GO VALUE: %d", DATA_G0);
+        
+        //B0 CASE
+        for(i = 0; i < 15; i = i + i) begin
+		  color_chart_B0[i] = 8'b00000000;
+		end //for
+		
+        for(i=0; i <= 2; i= i + 1)begin
+            for(j = 0; j <= 2; j = j + 1) begin
+                $display("BO VALUE: %d", window_B0[i][j]);
+                if(window_B0[i][j] > 0 && window_B0[i][j] <= 17) begin
+                    color_chart_B0[0] = color_chart_B0[0] + 1;
+                end //if
+                else if (window_B0[i][j] > 17 && window_B0[i][j] <= 34) begin
+                    color_chart_B0[1] = color_chart_B0[1] + 1;
+                end //elif
+                else if (window_B0[i][j] > 34 && window_B0[i][j] <= 51) begin
+                    color_chart_B0[2] = color_chart_B0[2] + 1;
+                end //elif
+                else if (window_B0[i][j] > 51 && window_B0[i][j] <= 68) begin
+                    color_chart_B0[3] = color_chart_B0[3] + 1;
+                end //elif
+                else if (window_B0[i][j] > 68 && window_B0[i][j] <= 85) begin
+                    color_chart_B0[4] = color_chart_B0[4] + 1;
+                end //elif
+                else if (window_B0[i][j] > 85 && window_B0[i][j] <= 102) begin
+                    color_chart_B0[5] = color_chart_B0[5] + 1;
+                end //elif
+                else if (window_B0[i][j] > 102 && window_B0[i][j] <= 119) begin
+                    color_chart_B0[6] = color_chart_B0[6] + 1;
+                end //elif
+                else if (window_B0[i][j] > 119 && window_B0[i][j] <= 136) begin
+                    color_chart_B0[7] = color_chart_B0[7] + 1;
+                end //elif
+                else if (window_B0[i][j] > 136 && window_B0[i][j] <= 153) begin
+                    color_chart_B0[8] = color_chart_B0[8] + 1;
+                end //elif
+                else if (window_B0[i][j] > 153 && window_B0[i][j] <= 170) begin
+                    color_chart_B0[9] = color_chart_B0[9] + 1;
+                end //elif
+                else if (window_B0[i][j] > 170 && window_B0[i][j] <= 187) begin
+                    color_chart_B0[10] = color_chart_B0[10] + 1;
+                end //elif
+                else if (window_B0[i][j] > 187 && window_B0[i][j] <= 204) begin
+                    color_chart_B0[11] = color_chart_B0[11] + 1;
+                end //elif
+                else if (window_B0[i][j] > 204 && window_B0[i][j] <= 221) begin
+                    color_chart_B0[12] = color_chart_B0[12] + 1;
+                end //elif
+                else if (window_B0[i][j] > 221 && window_B0[i][j] <= 238) begin
+                    color_chart_B0[13] = color_chart_B0[13] + 1;
+                end //elif
+                else if (window_B0[i][j] > 238 && window_B0[i][j] <= 255) begin
+                    color_chart_B0[14] = color_chart_B0[14] + 1;
+                end //elif
+
+            end // for
+        end // for
+        
+        $display("BO color chart value 0: %d", color_chart_B0[0]);
+        $display("BO color chart value 1: %d", color_chart_B0[1]);
+        $display("BO color chart value 2: %d", color_chart_B0[2]);
+        $display("BO color chart value 3: %d", color_chart_B0[3]);
+        $display("BO color chart value 4: %d", color_chart_B0[4]);
+        $display("BO color chart value 5: %d", color_chart_B0[5]);
+        $display("BO color chart value 6: %d", color_chart_B0[6]);
+        $display("BO color chart value 7: %d", color_chart_B0[7]);
+        $display("BO color chart value 8: %d", color_chart_B0[8]);
+        $display("BO color chart value 9: %d", color_chart_B0[9]);
+        $display("BO color chart value 10: %d", color_chart_B0[10]);
+        $display("BO color chart value 11: %d", color_chart_B0[11]);
+        $display("BO color chart value 12: %d", color_chart_B0[12]);
+        $display("BO color chart value 13: %d", color_chart_B0[13]);
+        $display("BO color chart value 14: %d", color_chart_B0[14]);
+        
+        
+        max_color = 0;
+        for(i = 0; i <=14; i = i + 1) begin
+            if (color_chart_B0[i] > max_color) begin
+                max_color = i;
+            end//if
+        end // for
+        $display("max color: %d", max_color);
+        case(max_color)
+            4'd0: DATA_B0 = 9;
+            4'd1: DATA_B0 = 26;
+            4'd2: DATA_B0 = 43;
+            4'd3: DATA_B0 = 60;
+            4'd4: DATA_B0 = 77;
+            4'd5: DATA_B0 = 94;
+            4'd6: DATA_B0 = 111;
+            4'd7: DATA_B0 = 128;
+            4'd8: DATA_B0 = 145;
+            4'd9: DATA_B0 = 162;
+            4'd10: DATA_B0 = 179;
+            4'd11: DATA_B0 = 196;
+            4'd12: DATA_B0 = 213;
+            4'd13: DATA_B0 = 230;
+            4'd14: DATA_B0 = 247;
+        endcase      
+		//$display("BO VALUE: %d", DATA_B0);
+		
+		//R1 CASE
+		for(i = 0; i < 15; i = i + i) begin
+		  color_chart_R1[i] = 8'b00000000;
+		end //for
+		
+        for(i=0; i <= 2; i= i + 1)begin
+            for(j = 0; j <= 2; j = j + 1) begin
+                if(window_R1[i][j] > 0 && window_R1[i][j] <= 17) begin
+                    color_chart_R1[0] = color_chart_R1[0] + 1;
+                end //if
+                else if (window_R1[i][j] > 17 && window_R1[i][j] <= 34) begin
+                    color_chart_R1[1] = color_chart_R1[1] + 1;
+                end //elif
+                else if (window_R1[i][j] > 34 && window_R1[i][j] <= 51) begin
+                    color_chart_R1[2] = color_chart_R1[2] + 1;
+                end //elif
+                else if (window_R1[i][j] > 51 && window_R1[i][j] <= 68) begin
+                    color_chart_R1[3] = color_chart_R1[3] + 1;
+                end //elif
+                else if (window_R1[i][j] > 68 && window_R1[i][j] <= 85) begin
+                    color_chart_R1[4] = color_chart_R1[4] + 1;
+                end //elif
+                else if (window_R1[i][j] > 85 && window_R1[i][j] <= 102) begin
+                    color_chart_R1[5] = color_chart_R1[5] + 1;
+                end //elif
+                else if (window_R1[i][j] > 102 && window_R1[i][j] <= 119) begin
+                    color_chart_R1[6] = color_chart_R1[6] + 1;
+                end //elif
+                else if (window_R1[i][j] > 119 && window_R1[i][j] <= 136) begin
+                    color_chart_R1[7] = color_chart_R1[7] + 1;
+                end //elif
+                else if (window_R1[i][j] > 136 && window_R1[i][j] <= 153) begin
+                    color_chart_R1[8] = color_chart_R1[8] + 1;
+                end //elif
+                else if (window_R1[i][j] > 153 && window_R1[i][j] <= 170) begin
+                    color_chart_R1[9] = color_chart_R1[9] + 1;
+                end //elif
+                else if (window_R1[i][j] > 170 && window_R1[i][j] <= 187) begin
+                    color_chart_R1[10] = color_chart_R1[10] + 1;
+                end //elif
+                else if (window_R1[i][j] > 187 && window_R1[i][j] <= 204) begin
+                    color_chart_R1[11] = color_chart_R1[11] + 1;
+                end //elif
+                else if (window_R1[i][j] > 204 && window_R1[i][j] <= 221) begin
+                    color_chart_R1[12] = color_chart_R1[12] + 1;
+                end //elif
+                else if (window_R1[i][j] > 221 && window_R1[i][j] <= 238) begin
+                    color_chart_R1[13] = color_chart_R1[13] + 1;
+                end //elif
+                else if (window_R1[i][j] > 238 && window_R1[i][j] <= 255) begin
+                    color_chart_R1[14] = color_chart_R1[14] + 1;
+                end //elif
+
+            end // for
+        end // for
+        
+        max_color = 0;
+        for(i = 0; i <=14; i = i + 1) begin
+            if (color_chart_R1[i] > max_color) begin
+                max_color = i;
+            end//if
+        end // for
+        
+        case(max_color)
+            4'd0: DATA_R1 = 9;
+            4'd1: DATA_R1 = 26;
+            4'd2: DATA_R1 = 43;
+            4'd3: DATA_R1 = 60;
+            4'd4: DATA_R1 = 77;
+            4'd5: DATA_R1 = 94;
+            4'd6: DATA_R1 = 111;
+            4'd7: DATA_R1 = 128;
+            4'd8: DATA_R1 = 145;
+            4'd9: DATA_R1 = 162;
+            4'd10: DATA_R1 = 179;
+            4'd11: DATA_R1 = 196;
+            4'd12: DATA_R1 = 213;
+            4'd13: DATA_R1 = 230;
+            4'd14: DATA_R1 = 247;
+        endcase
+		//$display("R1 VALUE: %d", DATA_R1);
+		
+		//G1 CASE
+		
+		for(i = 0; i < 15; i = i + i) begin
+		  color_chart_G1[i] = 8'b00000000;
+		end //for
+		
+        for(i=0; i <= 2; i= i + 1)begin
+            for(j = 0; j <= 2; j = j + 1) begin
+                if(window_G1[i][j] > 0 && window_G1[i][j] <= 17) begin
+                    color_chart_G1[0] = color_chart_G1[0] + 1;
+                end //if
+                else if (window_G1[i][j] > 17 && window_G1[i][j] <= 34) begin
+                    color_chart_G1[1] = color_chart_G1[1] + 1;
+                end //elif
+                else if (window_G1[i][j] > 34 && window_G1[i][j] <= 51) begin
+                    color_chart_G1[2] = color_chart_G1[2] + 1;
+                end //elif
+                else if (window_G1[i][j] > 51 && window_G1[i][j] <= 68) begin
+                    color_chart_G1[3] = color_chart_G1[3] + 1;
+                end //elif
+                else if (window_G1[i][j] > 68 && window_G1[i][j] <= 85) begin
+                    color_chart_G1[4] = color_chart_G1[4] + 1;
+                end //elif
+                else if (window_G1[i][j] > 85 && window_G1[i][j] <= 102) begin
+                    color_chart_G1[5] = color_chart_G1[5] + 1;
+                end //elif
+                else if (window_G1[i][j] > 102 && window_G1[i][j] <= 119) begin
+                    color_chart_G1[6] = color_chart_G1[6] + 1;
+                end //elif
+                else if (window_G1[i][j] > 119 && window_G1[i][j] <= 136) begin
+                    color_chart_G1[7] = color_chart_G1[7] + 1;
+                end //elif
+                else if (window_G1[i][j] > 136 && window_G1[i][j] <= 153) begin
+                    color_chart_G1[8] = color_chart_G1[8] + 1;
+                end //elif
+                else if (window_G1[i][j] > 153 && window_G1[i][j] <= 170) begin
+                    color_chart_G1[9] = color_chart_G1[9] + 1;
+                end //elif
+                else if (window_G1[i][j] > 170 && window_G1[i][j] <= 187) begin
+                    color_chart_G1[10] = color_chart_G1[10] + 1;
+                end //elif
+                else if (window_G1[i][j] > 187 && window_G1[i][j] <= 204) begin
+                    color_chart_G1[11] = color_chart_G1[11] + 1;
+                end //elif
+                else if (window_G1[i][j] > 204 && window_G1[i][j] <= 221) begin
+                    color_chart_G1[12] = color_chart_G1[12] + 1;
+                end //elif
+                else if (window_G1[i][j] > 221 && window_G1[i][j] <= 238) begin
+                    color_chart_G1[13] = color_chart_G1[13] + 1;
+                end //elif
+                else if (window_G1[i][j] > 238 && window_G1[i][j] <= 255) begin
+                    color_chart_G1[14] = color_chart_G1[14] + 1;
+                end //elif
+
+            end // for
+        end // for
+        
+        max_color = 0;
+        for(i = 0; i <=14; i = i + 1) begin
+            if (color_chart_G1[i] > max_color) begin
+                max_color = i;
+            end//if
+        end // for
+        
+        case(max_color)
+            4'd0: DATA_G1 = 9;
+            4'd1: DATA_G1 = 26;
+            4'd2: DATA_G1 = 43;
+            4'd3: DATA_G1 = 60;
+            4'd4: DATA_G1 = 77;
+            4'd5: DATA_G1 = 94;
+            4'd6: DATA_G1 = 111;
+            4'd7: DATA_G1 = 128;
+            4'd8: DATA_G1 = 145;
+            4'd9: DATA_G1 = 162;
+            4'd10: DATA_G1 = 179;
+            4'd11: DATA_G1 = 196;
+            4'd12: DATA_G1 = 213;
+            4'd13: DATA_G1 = 230;
+            4'd14: DATA_G1 = 247;
+        endcase
+        //$display("G1 VALUE: %d", DATA_G1);
+        
+        //B1 CASE
+        
+        for(i = 0; i < 15; i = i + i) begin
+		  color_chart_B1[i] = 8'b00000000;
+		end //for
+		
+        for(i=0; i <= 2; i= i + 1)begin
+            for(j = 0; j <= 2; j = j + 1) begin
+                if(window_B1[i][j] > 0 && window_B1[i][j] <= 17) begin
+                    color_chart_B1[0] = color_chart_B1[0] + 1;
+                end //if
+                else if (window_B1[i][j] > 17 && window_B1[i][j] <= 34) begin
+                    color_chart_B1[1] = color_chart_B1[1] + 1;
+                end //elif
+                else if (window_B1[i][j] > 34 && window_B1[i][j] <= 51) begin
+                    color_chart_B1[2] = color_chart_B1[2] + 1;
+                end //elif
+                else if (window_B1[i][j] > 51 && window_B1[i][j] <= 68) begin
+                    color_chart_B1[3] = color_chart_B1[3] + 1;
+                end //elif
+                else if (window_B1[i][j] > 68 && window_B1[i][j] <= 85) begin
+                    color_chart_B1[4] = color_chart_B1[4] + 1;
+                end //elif
+                else if (window_B1[i][j] > 85 && window_B1[i][j] <= 102) begin
+                    color_chart_B1[5] = color_chart_B1[5] + 1;
+                end //elif
+                else if (window_B1[i][j] > 102 && window_B1[i][j] <= 119) begin
+                    color_chart_B1[6] = color_chart_B1[6] + 1;
+                end //elif
+                else if (window_B1[i][j] > 119 && window_B1[i][j] <= 136) begin
+                    color_chart_B1[7] = color_chart_B1[7] + 1;
+                end //elif
+                else if (window_B1[i][j] > 136 && window_B1[i][j] <= 153) begin
+                    color_chart_B1[8] = color_chart_B1[8] + 1;
+                end //elif
+                else if (window_B1[i][j] > 153 && window_B1[i][j] <= 170) begin
+                    color_chart_B1[9] = color_chart_B1[9] + 1;
+                end //elif
+                else if (window_B1[i][j] > 170 && window_B1[i][j] <= 187) begin
+                    color_chart_B1[10] = color_chart_B1[10] + 1;
+                end //elif
+                else if (window_B1[i][j] > 187 && window_B1[i][j] <= 204) begin
+                    color_chart_B1[11] = color_chart_B1[11] + 1;
+                end //elif
+                else if (window_B1[i][j] > 204 && window_B1[i][j] <= 221) begin
+                    color_chart_B1[12] = color_chart_B1[12] + 1;
+                end //elif
+                else if (window_B1[i][j] > 221 && window_B1[i][j] <= 238) begin
+                    color_chart_B1[13] = color_chart_B1[13] + 1;
+                end //elif
+                else if (window_B1[i][j] > 238 && window_B1[i][j] <= 255) begin
+                    color_chart_B1[14] = color_chart_B1[14] + 1;
+                end //elif
+
+            end // for
+        end // for
+        
+        max_color = 0;
+        for(i = 0; i <=14; i = i + 1) begin
+            if (color_chart_B1[i] > max_color) begin
+                max_color = i;
+            end//if
+        end // for
+        
+        case(max_color)
+            4'd0: DATA_B1 = 9;
+            4'd1: DATA_B1 = 26;
+            4'd2: DATA_B1 = 43;
+            4'd3: DATA_B1 = 60;
+            4'd4: DATA_B1 = 77;
+            4'd5: DATA_B1 = 94;
+            4'd6: DATA_B1 = 111;
+            4'd7: DATA_B1 = 128;
+            4'd8: DATA_B1 = 145;
+            4'd9: DATA_B1 = 162;
+            4'd10: DATA_B1 = 179;
+            4'd11: DATA_B1 = 196;
+            4'd12: DATA_B1 = 213;
+            4'd13: DATA_B1 = 230;
+            4'd14: DATA_B1 = 247;
+        endcase    
+		//$display("B1 VALUE: %d", DATA_B1);
+		
+		`endif
+		
 		
 	end
 end
 
+//function [7:0] apply_oil_effect;
+//    input [7:0] window_temp [0:2][0:2];
+//    reg [7:0] result;
+//    integer i, j;
+//    reg[7:0] color_histogram [0:255];
+//    reg[7:0] max_color;
+//    begin
+//    for(i=0; i <= 2; i= i + 1)begin
+//        for(j = 0; j <= 2; j = j + 1) begin
+//            color_histogram[window_temp[i][j]] = color_histogram[window_temp[i][j]] + 1;
+//        end // for
+//    end // for
+    
+//    max_color = 0;
+//    for(i = 1; i <= 255; i = i + 1) begin
+//        if (color_histogram[i] > color_histogram[max_color]) begin
+//            max_color = i;
+//        end//if
+//    end // for
+//    apply_oil_effect = result;
+    
+//    end//begin
+//endfunction
+    
+//function [7:0] apply_blur_filter;
+//    input [7:0] window [0:2][0:2];
+//    reg  [7:0] result;
+//    integer i, j;
+//    begin
+//    result = 0;
+    
+//    //convolve the windo with the blur kernel
+//    for (i = 0; i<= 2; i = i + 1) begin
+//        for (j= 0; j <= 2; j = j + 1) begin
+//            result = result + (window[i][j] * blur_kernel[i][j]);
+//        end // for
+//    end // for
+    
+//    result = result / 9;
+    
+//    apply_blur_filter = result;
+//    end // begin
+//endfunction
 endmodule
