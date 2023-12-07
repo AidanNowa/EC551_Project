@@ -3,7 +3,7 @@ module image_read
 #(
   parameter WIDTH 	= 768, 					// Image width
 			HEIGHT 	= 512, 						// Image height
-			INFILE  = "/home/aidannow/EC551/Project/kodim23.hex", 	// image file
+			INFILE  = "", // image file
 			START_UP_DELAY = 100, 				// Delay during start up time
 			HSYNC_DELAY = 160,					// Delay between HSYNC pulses	
 			VALUE= 100,								// value for Brightness operation
@@ -98,9 +98,9 @@ begin
         start <= 0;
 		HRESETn_d <= 0;
     end
-    else begin											//        		______ 				
+    else begin											//            ______ 				
         HRESETn_d <= HRESETn;							//       	|		|
-		if(HRESETn == 1'b1 && HRESETn_d == 1'b0)		// __0___|	1	|___0____	: starting pulse
+		if(HRESETn == 1'b1 && HRESETn_d == 1'b0)		// __0___   |	1	|___0____	: starting pulse
 			start <= 1'b1;
 		else
 			start <= 1'b0;

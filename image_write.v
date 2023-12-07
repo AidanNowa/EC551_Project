@@ -4,7 +4,7 @@
 module image_write
 #(parameter WIDTH 	= 768,							// Image width
 			HEIGHT 	= 512,								// Image height
-			INFILE  = "/home/aidannow/EC551/Project/output_video_test.bmp",						// Output image
+			INFILE  = "",						// Output image
 			BMP_HEADER_NUM = 54							// Header for bmp image
 )
 (
