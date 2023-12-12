@@ -37,4 +37,4 @@ Verilog
 
 ## System Architecture
 ## Overview
-![overview]/images/551_overview_arch.png
+![overview](/images/551_overview_arch.png)
