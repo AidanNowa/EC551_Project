@@ -32,7 +32,9 @@ module bram_memory(
     output reg [11:0] data_out
 );
 
-    reg [11:0] memory [0:307199]; // Adjusted size for 640x480 image
+    //reg [11:0] memory [0:30199]; // Adjusted size for 640x480 image
+    reg [11:0] memory [307199:0]; // Adjusted size for 640x480 image
+
 
     /** Read port */
     always @(posedge clk_read) begin

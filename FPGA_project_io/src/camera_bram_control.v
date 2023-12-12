@@ -21,8 +21,9 @@
 
 
 module camera_bram_controller(
-    input sysclk,
+    input sysrst,
     input p_clk,
+    input cmos_config_done,
     input cmos_frame_done,              // Signals end of one frame/start of another
     output reg bram_write_enable,
     output reg[18:0] bram_address
@@ -61,8 +62,9 @@ module camera_bram_controller(
                 bram_address <= bram_address + 1;  // Increment address
                 fsm_state <= cmos_frame_done ? IDLE : WRITE_FRAME;
             end
-            default: fsm_state <= IDLE;
         endcase
+        
+//        if(!cmos_config_done || sysrst) fsm_state <= IDLE;
 
     end
 

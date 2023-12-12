@@ -84,7 +84,7 @@ module OV7670_config_rom(
     51: dout <= 16'h86_af;
     52: dout <= 16'h87_c4;
     53: dout <= 16'h88_d7;
-    54: dout <= 16'h89_e8;
+//    54: dout <= 16'h89_e8;
     //AGC and AEC
     54: dout <= 16'h13_e0; //COM8, disable AGC / AEC
     55: dout <= 16'h00_00; //set gain reg to 0 for AGC

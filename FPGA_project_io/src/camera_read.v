@@ -40,7 +40,7 @@ module camera_read(
 	
 	case(FSM_state)
 	
-	WAIT_FRAME_START: begin //wait for VSYNC
+	default: begin //wait for VSYNC    (WAIT_FRAME_CAPTURE)
 	   FSM_state <= (!vsync) ? ROW_CAPTURE : WAIT_FRAME_START;
 	   frame_done <= 0;
 	   pixel_half <= 0;

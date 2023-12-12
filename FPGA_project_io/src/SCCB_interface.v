@@ -171,6 +171,7 @@ module SCCB_interface
                 FSM_state <= (timer == 0) ? FSM_return_state : FSM_TIMER;
                 timer <= (timer==0) ? 0 : timer - 1;
             end
+            default: FSM_state<= FSM_IDLE;
         endcase
     end
     

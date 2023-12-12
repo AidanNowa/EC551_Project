@@ -50,8 +50,8 @@ module top(
     );
 
     /** Wires */
-    wire config_start = 0;                          // Signal to camera configuration
-    wire config_done = 0;                           // Signal when configuration is complete
+    reg config_start;                          // Signal to camera configuration
+    wire config_done;                           // Signal when configuration is complete
 
     wire [15:0] cmos_pixel_data;                    // RGB565 representation of a single pixel
     wire cmos_pixel_valid;                          // Signals if data in cmos_pixel_data is valid
@@ -61,6 +61,7 @@ module top(
 
     wire bram_write_en;                             // Write enable for BRAM
     wire[18:0] bram_write_addr;                     // Write address for BRAM
+    wire[18:0] bram_read_addr;
 
     wire[11:0] bram_dataout;                        // Output from BRAM controller
 
@@ -68,7 +69,20 @@ module top(
     wire vga_clk;                                   // 25MHz clock signal from VGA write
 
     /** Assignments */
-//    assign cmos_xclk = sysclk;
+////    assign cmos_xclk = sysclk;
+//    initial begin
+//        config_start <= 1;
+//    end
+
+//    always @(posedge sysrst) begin
+//        cmos_rst_n <= 1;
+//    end
+    
+//    always @(negedge sysrst) begin
+//        cmos_rst_n <= 0;
+//        config_start <= 1;
+//    end
+    always @ (config_done) config_start <= 1'b0;
 
     /** Modules */
     camera_configure config1 (
@@ -97,6 +111,7 @@ module top(
      bram_memory bram1 (
         .clk_read(vga_clk),
         .clk_write(cmos_pclk),
+        .cmos_pixel_valid(cmos_pixel_valid),
         .read_en(1'b1),
         .write_en(bram_write_en),
         .read_addr(bram_read_addr),
@@ -106,8 +121,9 @@ module top(
      );
 
     camera_bram_controller bc1 (         
-        .sysclk(sysclk),
+        .sysrst(sysrst),
         .p_clk(cmos_pclk),
+        .cmos_config_done(config_done),
         .cmos_frame_done(cmos_frame_done),
         .bram_write_enable(bram_write_en),
         .bram_address(bram_write_addr)
@@ -115,8 +131,9 @@ module top(
 
     vga_interface vga1 (
         .sysclk(sysclk),
-        .sysrst(sysrst),
-        .pixel_data(bram_controller_dout),
+//        .sysrst(sysrst),
+        .pixel_data(bram_dataout),
+        .read_address(bram_read_addr),
         .vga_out_clk(vga_clk),
         .vga_out_r(vga_out_r),
         .vga_out_g(vga_out_g),

@@ -96,11 +96,12 @@ module OV7670_config
             end
                            
                 
-            FSM_TIMER: begin //count down and jump to next state
+            default: begin //count down and jump to next state (FSM_TIMER)
                 FSM_state <= (timer == 0) ? FSM_return_state : FSM_TIMER;
                 timer <= (timer==0) ? 0 : timer - 1;
                 SCCB_interface_start <= 0;
             end
+            
         endcase
     end
 endmodule
