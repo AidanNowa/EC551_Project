@@ -20,32 +20,31 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module horizontal_sync #(parameter HSIZE=768)(
+module horizontal_sync #(parameter SYNC_SIZE=0)(
     clk,
     rst,
     hsync,
     R,G,B,
-    buffer
+    bufferin,
+    bufferout
     );
     
     input clk, rst, hsync;
     input [7:0] R, G, B;
-    output reg [HSIZE-1:0] buffer;
-    
-    integer counter = 0;
+    input [SYNC_SIZE-1:0] bufferin;
+    output reg [SYNC_SIZE-1:0] bufferout;
+    reg [23:0] pixel;
     
     always @(posedge clk) begin
-        if (!rst || hsync) begin
-            buffer <= 0;
-            counter <= 0;
+        if (!rst || !hsync) begin
+            bufferout <= 0;
         end else begin
-            buffer[counter] <= R;
-            buffer[counter+1] <= G;
-            buffer[counter+2] <= B;
-            counter <= counter + 3;
+            pixel[7:0] <= R;
+            pixel[15:8] <= G;
+            pixel[23:16] <= B;
+            
+            bufferout <= {bufferin[SYNC_SIZE-24:0],pixel};
         end
     end
-    
-    
     
 endmodule

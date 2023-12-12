@@ -4,6 +4,7 @@
 
 // Choose the operation of code by delete // in the beginning of the selected line
 
+`define ENCRYPTION_ECB
 //`define BRIGHTNESS_SUBTRACTION_OPERATION
 //`define BRIGHTNESS_ADDITION_OPERATION
 //`define INVERT_OPERATION
@@ -15,4 +16,4 @@
 //`define TRIP_OPERATION
 //`define BLUR_OPERATION
 //`define SHARPEN_OPERATION
-`define OIL_OPERATION
+//`define OIL_OPERATION

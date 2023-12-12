@@ -3,9 +3,9 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 12/05/2023 07:49:09 PM
+// Create Date: 12/05/2023 07:50:04 PM
 // Design Name: 
-// Module Name: ebc_enc_1bit
+// Module Name: ebc_dec_1bit
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,16 +20,17 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module ebc_enc_1bit(
+module ecb_dec_1bit(
     K,
     PT,
     CT
     );
     
-    // basically this module encrypts one by one
+    // basically this module decrypts one by one
     input K;
-    input PT;
-    output CT;
+    input CT;
+    output PT;
     
-    assign CT = PT ^ K;
+    assign PT = CT ^ K;
+
 endmodule

@@ -332,6 +332,19 @@ always @(*) begin
 		
 		
 		HSYNC   = 1'b1;
+        `ifdef ENCRYPTION_ECB
+            
+             tempR0 = org_R[WIDTH * row + col];
+             tempR1 = org_R[WIDTH * row + col+1];
+             tempG0 = org_G[WIDTH * row + col];
+             tempG1 = org_G[WIDTH * row + col+1];
+             tempB0 = org_B[WIDTH * row + col];
+             tempB1 = org_B[WIDTH * row + col+1];
+              
+             {DATA_R0,DATA_G0,DATA_B0,DATA_R1,DATA_G1,DATA_B1} = {tempR0,tempG0,tempB0,tempR1,tempG1,tempB1};
+             
+        `endif
+    
 		`ifdef BRIGHTNESS_ADDITION_OPERATION	
 		/**************************************/		
 		/*		BRIGHTNESS ADDITION OPERATION */
