@@ -18,3 +18,15 @@ Nexys A7 Artix-7 FPGA (https://digilent.com/shop/nexys-a7-fpga-trainer-board-rec
 Vivado 2022.1
 Verilog
 
+## How to Run
+
+### Simulation Portion
+1. Create a new Vivado 2022.1 project.
+
+2. Upload the image_read.v, image_write.v, parameters.v, and tb_simulation.v files to your project
+
+3. Within the tb_simulation.v file, change the .INFILE() section of the image_read component to the path to the hex file of your image and the .INFILE() section of the image_write component to the destination path (this will create a new file if one with that name does not exist or override the current file).
+
+   a. if you do not have a hex file of your image. First, run the convert_bitmap_image_to_hex.m file with the bitmap image name as the input and change the name of the output file to your desired name ('kodim24.hex' is the default name).
+
+4. 
