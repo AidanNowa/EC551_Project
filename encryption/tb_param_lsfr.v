@@ -30,7 +30,7 @@ module tb_param_lsfr(
     reg enable;
     wire [BLOCK_SIZE:0] Y;
     
-    param_lsfr #(.BLOCK_SIZE(BLOCK_SIZE))LSFR(.clk(clk), .reset(reset), .enable(enable), .Y(Y));
+    param_lfsr #(.BLOCK_SIZE(BLOCK_SIZE))LSFR(.clk(clk), .reset(reset), .enable(enable), .Y(Y));
     
     initial begin
         clk = 1'b1;

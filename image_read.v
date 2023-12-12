@@ -341,7 +341,12 @@ always @(*) begin
              tempB0 = org_B[WIDTH * row + col];
              tempB1 = org_B[WIDTH * row + col+1];
               
-             {DATA_R0,DATA_G0,DATA_B0,DATA_R1,DATA_G1,DATA_B1} = {tempR0,tempG0,tempB0,tempR1,tempG1,tempB1};
+             DATA_R0 = tempR0;
+             DATA_G0 = tempG0;
+             DATA_B0 = tempB0;
+             DATA_R1 = tempR1;
+             DATA_G1 = tempG1;
+             DATA_B1 = tempB1;
              
         `endif
     

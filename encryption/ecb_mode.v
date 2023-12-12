@@ -35,12 +35,16 @@ module ecb_mode
     input [BLOCK_SIZE-1:0] key;
     input enable;
     input [SYNC_SIZE-1:0] data_plain;
-    output [SYNC_SIZE-1:0] data_encrypted;
+    output reg [SYNC_SIZE-1:0] data_encrypted;
+    reg [SYNC_SIZE-1:0] previous;
+    integer i;
     
-    genvar i;
-    
-    for(i=0;i<SYNC_SIZE;i=i+1) begin
-        ecb_enc_1bit ECB_ENC_1B(.K(key[i%BLOCK_SIZE]), .PT(data_plain[i]), .CT(data_encrypted[i]));
+    always @(*) begin
+        if (enable == 1'b1) begin
+            for(i=0;i<SYNC_SIZE;i=i+1) begin
+                data_encrypted[i] = data_plain[i] ^ key[i%BLOCK_SIZE];
+            end  
+        end 
     end
     
 
