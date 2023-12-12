@@ -9,7 +9,12 @@ Our current system utilizes Vivado's simulation capabilities and system verilog 
 
 ## Requirements 
 
+### Hardware
 OV7670 camera ([480x640p RGB565 output](https://www.amazon.com/HiLetgo-OV7670-640x480-0-3Mega-Arduino/dp/B07S66Y3ZQ))
           
 Nexys A7 Artix-7 FPGA (https://digilent.com/shop/nexys-a7-fpga-trainer-board-recommended-for-ece-curriculum/)
+
+### Software
+Vivado 2022.1
+Verilog
 
