@@ -45,3 +45,12 @@ The system follows a pipeline structure. The camera captures the image before th
 ## Analysis
 
 Overall, while our system is not fully implemented on the FPGA board, the simulation function can be utilized to generate images that have been transformed by up to 10 different functions as well as an encryption algorithm. Also, utilizing parallelization within the simulated transformations added additional complexity to the transformations, but should increase the speed of the process. The I/O modules have also been shown to synthesize and can be pushed to the FPGA board but the complete pipeline has not yet been pushed to the board.
+
+### Video Details
+
+## Title: EC551 Image Transformations and Encryption
+
+## Description:
+The goal of this project was to implement a system that could carry out real-time image transformations and encryption on the Nexys-7 FPGA.
+
+Our current system utilizes Vivado's simulation capabilities and system verilog to read in an image in hexcode from the given file path and write the transformed image to a bitmap in the given location. These transformations vary from grayscaling to blurring to encryption. We also have implemented synthesizable code for the camera interface, the VGA driver, and the dual-port BRAM buffer on the FPGA.
