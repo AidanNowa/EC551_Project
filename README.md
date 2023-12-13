@@ -32,9 +32,11 @@ Verilog
 
 4. Set the simulation time to be 6 seconds (Settings->Simulation->Simulation(within new window)->xsim.simulate.runtime*).
 
-5. Under the 'Simulation' select 'Run Simulation' then 'Run Behavioral Simulation'.
+5. Within the parameters.v file uncomment the transformation you would like to 
 
-6. From here you can either wait for the simulation to complete or monitor the destination folder until the completed image appears. The simulation can take 5+ minutes but the completed image should appear within a minute.   
+6. Under the 'Simulation' select 'Run Simulation' then 'Run Behavioral Simulation'.
+
+7. From here you can either wait for the simulation to complete or monitor the destination folder until the completed image appears. The simulation can take 5+ minutes but the completed image should appear within a minute.   
 
 ## System Architecture Overview
 ![overview](/images/551_overview_arch.png)
