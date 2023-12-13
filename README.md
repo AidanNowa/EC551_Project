@@ -10,10 +10,10 @@ Our current system utilizes Vivado's simulation capabilities and system verilog 
 ## Requirements 
 
 ### Hardware
+![FPGA_Board](images/NexysA7-obl-600__85101.jpg)
 OV7670 camera ([480x640p RGB565 output](https://www.amazon.com/HiLetgo-OV7670-640x480-0-3Mega-Arduino/dp/B07S66Y3ZQ))
           
 Nexys A7 Artix-7 FPGA (https://digilent.com/shop/nexys-a7-fpga-trainer-board-recommended-for-ece-curriculum/)
-![FPGA_Board](images/NexysA7-obl-600__85101.jpg)
 
 ### Software
 Vivado 2022.1
@@ -36,8 +36,10 @@ Verilog
 
 6. From here you can either wait for the simulation to complete or monitor the destination folder until the completed image appears. The simulation can take 5+ minutes but the completed image should appear within a minute.   
 
-## System Architecture
-## Overview
+## System Architecture Overview
 ![overview](/images/551_overview_arch.png)
+The system follows a pipeline structure. The camera captures the image before the pixel-wise downsampling module loads the image into the frame buffer. Parallelization is then utilized as two pixels at a time are transformed before the full image is passed through the VGA and displayed.
+
+
 
 
