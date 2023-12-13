@@ -30,7 +30,7 @@ Verilog
 
    a. if you do not have a hex file of your image: First, run the convert_bitmap_image_to_hex.m file with the bitmap image name as the input and change the name of the output file to your desired name ('kodim24.hex' is the default name).
 
-4. Set the simulation time to be 6 seconds (Settings->Simulation->Simulation(within new window)->xsim.simulate.runtime*).
+4. Set the simulation time to be 6 seconds (Settings -> Simulation -> Simulation(within new window) -> xsim.simulate.runtime*).
 
 5. Within the parameters.v file uncomment the transformation you would like to run and ensure that all other transformations are commented out.
 
