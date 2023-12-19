@@ -48,7 +48,9 @@ Overall, while our system is not fully implemented on the FPGA board, the simula
 
 ### Video Details
 
-## Link: https://www.youtube.com/watch?v=bjGYunQJUVM
+## Youtube Link: https://www.youtube.com/watch?v=bjGYunQJUVM
+
+## Google Drive Link: https://drive.google.com/file/d/1gATUr9Uhbika6bf0-_6tj3v25HJhlIn5/view
 
 ## Title: EC551 Image Transformations and Encryption
 
